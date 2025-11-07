@@ -1,0 +1,1 @@
+// # geofencing safe zone schema
