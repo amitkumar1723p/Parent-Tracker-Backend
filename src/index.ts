@@ -20,19 +20,19 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 
 // ✅ MongoDB database connect karne ke liye
-import { connectDB } from './config/db.js';
+import { connectDB } from './config/db';
 
 // ✅ Environment variables ka central config
-import { env } from './config/env.ts';
+import { env } from './config/env';
 
 // ✅ Saare routes ka main entry point
-import router from './routes/index.js';
+import router from './routes/index';
 
 // ✅ Custom error handling middleware (404 + server errors)
-import { notFound, onError } from './middlewares/error.ts';
+import { notFound, onError } from './middlewares/error';
 
 // ✅ Socket.io (real-time functionalities) init karne ke liye
-import { initSocket } from './socket/index.ts';
+import { initSocket } from './socket/index';
 
 const app = express();
 
@@ -40,6 +40,7 @@ const app = express();
  * 🛡️ Security & Payload Parsing Middlewares
  ----------------------------------------*/
 
+// "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules src/index.ts",
 // ✅ Secure HTTP headers add karta hai
 app.use(helmet());
 
