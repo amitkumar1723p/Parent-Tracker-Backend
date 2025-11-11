@@ -1,12 +1,13 @@
 //  # JWT sign/verify utils
 
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env.js';
-import { IUser } from '../models/user';
+import jwt from "jsonwebtoken";
+import { env } from "../config/env.js";
+import { IUser } from "../models/user";
 export function signJWT(user: IUser) {
   return jwt.sign(
     { sub: user._id.toString(), role: user.role, name: user.name },
-    env.JWT_SECRET
+    env.JWT_SECRET,
+    { expiresIn: "7d" } // options object
     // { expiresIn: env.JWT_EXPIRES_IN }
   );
 }
