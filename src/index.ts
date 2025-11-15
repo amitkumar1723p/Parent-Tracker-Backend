@@ -76,7 +76,9 @@ app.use('/api', router);
  * ✅ Health Check Route
  * (Server chal raha hai ya nahi)
  ----------------------------------------*/
-app.get('/health', (_, res) => res.json({ ok: true }));
+app.get('/health', (_, res) =>
+  res.json({ status: true, message: 'Helth is OK' })
+);
 
 /** ---------------------------------------
  * ❌ 404 + 🛑 Error Handling

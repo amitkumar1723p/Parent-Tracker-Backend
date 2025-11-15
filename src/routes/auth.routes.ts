@@ -15,6 +15,7 @@ const registerSchema = z.object({
 
 // ✅ POST route for user registration
 router.post('/register', async (req, res) => {
+  console.log('amitkumar', 'run register');
   // Step 1: Validate incoming request body with Zod schema
   const parsed = registerSchema.safeParse(req.body);
 
@@ -28,15 +29,15 @@ router.post('/register', async (req, res) => {
   if (!email && !phone)
     return res
       .status(400)
-      .json({ ok: false, message: 'Email or phone required' });
+      .json({ status: false, message: 'Email or phone required' });
 
   // Step 5: Check if email already exists in DB
   if (email && (await User.findOne({ email })))
-    return res.status(409).json({ ok: false, message: 'Email in use' });
+    return res.status(409).json({ status: false, message: 'Email in use' });
 
   // Step 6: Check if phone already exists in DB
   if (phone && (await User.findOne({ phone })))
-    return res.status(409).json({ ok: false, message: 'Phone in use' });
+    return res.status(409).json({ status: false, message: 'Phone in use' });
 
   // Step 7: Create new user in the database using validated data
   const user = await User.create(parsed.data);
@@ -46,7 +47,7 @@ router.post('/register', async (req, res) => {
 
   // Step 9: Send success response with token and basic user info
   res.json({
-    ok: true,
+    status: true,
     token,
     user: { id: user._id, name: user.name, role: user.role },
   });
@@ -66,15 +67,19 @@ router.post('/login', async (req, res) => {
     $or: [{ email: emailOrPhone }, { phone: emailOrPhone }],
   }).select('+password');
   if (!user)
-    return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+    return res
+      .status(401)
+      .json({ status: false, message: 'Invalid credentials' });
 
   const match = await user.comparePassword(password);
   if (!match)
-    return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+    return res
+      .status(401)
+      .json({ status: false, message: 'Invalid credentials' });
 
   const token = signJWT(user);
   res.json({
-    ok: true,
+    status: true,
     token,
     user: { id: user._id, name: user.name, role: user.role },
   });

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
 export function notFound(req: Request, res: Response) {
-  res.status(404).json({ ok: false, message: 'Route not found' });
+  res.status(404).json({ status: false, message: 'Route not found' });
 }
 
 export function onError(
@@ -13,5 +13,5 @@ export function onError(
   console.error(err);
   res
     .status(err.status || 500)
-    .json({ ok: false, message: err.message || 'Server error' });
+    .json({ status: false, message: err.message || 'Server error' });
 }
