@@ -1,88 +1,189 @@
+// src/routes/auth.routes.ts
+// ✔ COMPLETE AUTH ROUTES FOR OTP LOGIN
+// ✔ /send-otp → generate + send OTP
+// ✔ /verify-otp → verify OTP + return temp token
+// ✔ /complete-profile → final user creation + JWT token
+
 import { Router } from 'express';
 import { z } from 'zod';
+import Otp from '../models/Otp';
 import User from '../models/user';
-import { signJWT } from '../utils/jwt';
+import { signUserToken } from '../utils/jwt.js';
+import { sendOtpEmail } from '../utils/mail';
 
 const router = Router();
 
-const registerSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  password: z.string().min(6),
-  role: z.enum(['PARENT', 'CHILD', 'EMPLOYEE']),
+/* ---------------------------------------------------------
+   📌 1. SEND OTP
+---------------------------------------------------------- */
+
+router.post('/send-otp', async (req, res) => {
+  try {
+    console.log('send otp');
+    const bodySchema = z.object({
+      email: z.string().email(),
+    });
+
+    const parsed = bodySchema.safeParse(req.body);
+
+    if (!parsed.success)
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid input',
+        errors: parsed.error, // optional
+      });
+
+    const { email } = parsed.data;
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Remove existing OTP (cleanup)
+    await Otp.deleteMany({ email });
+
+    // Save OTP with 5 min expiry
+    await Otp.create({
+      email,
+      otp,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    // TODO: Send email via nodemailer
+    // console.log('📩 OTP for', email, '=', otp);
+    await sendOtpEmail(email, otp); // <<--- real email send
+
+    res.status(200).json({
+      status: true,
+      message: 'OTP sent successfully',
+    });
+  } catch (err) {
+    console.error('SEND OTP ERROR:', err);
+    res.status(500).json({ status: false, message: 'Failed to send OTP' });
+  }
 });
 
-// ✅ POST route for user registration
-router.post('/register', async (req, res) => {
-  console.log('amitkumar', 'run register');
-  // Step 1: Validate incoming request body with Zod schema
-  const parsed = registerSchema.safeParse(req.body);
+/* ---------------------------------------------------------
+   📌 2. VERIFY OTP
+---------------------------------------------------------- */
 
-  // Step 2: If validation fails, return 400 with error details
-  if (!parsed.success) return res.status(400).json(parsed.error);
+interface VerifyOtpResponse {
+  status: boolean;
+  message: string;
+  token?: string;
+  user?: any;
+}
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const schema = z.object({
+      email: z.string().email(),
+      otp: z.string().length(6),
+    });
 
-  // Step 3: Destructure email and phone from validated data
-  const { email, phone } = parsed.data;
+    //  console.log(req.body ,"req.body")
+    const parsed = schema.safeParse(req.body);
 
-  // Step 4: Ensure that at least one (email or phone) is provided
-  if (!email && !phone)
-    return res
-      .status(400)
-      .json({ status: false, message: 'Email or phone required' });
+    if (!parsed.success)
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid input',
+        errors: parsed.error, // optional
+      });
 
-  // Step 5: Check if email already exists in DB
-  if (email && (await User.findOne({ email })))
-    return res.status(409).json({ status: false, message: 'Email in use' });
+    const { email, otp } = parsed.data;
 
-  // Step 6: Check if phone already exists in DB
-  if (phone && (await User.findOne({ phone })))
-    return res.status(409).json({ status: false, message: 'Phone in use' });
+    // Check in DB
+    const record = await Otp.findOne({ email, otp });
 
-  // Step 7: Create new user in the database using validated data
-  const user = await User.create(parsed.data);
+    if (!record)
+      return res.status(400).json({ status: false, message: 'Invalid OTP' });
 
-  // Step 8: Generate JWT token for the created user
-  const token = signJWT(user);
+    if (record.expiresAt < new Date())
+      return res.status(400).json({ status: false, message: 'OTP Expired' });
 
-  // Step 9: Send success response with token and basic user info
-  res.json({
-    status: true,
-    token,
-    user: { id: user._id, name: user.name, role: user.role },
-  });
+    // Mark OTP as verified
+    record.verified = true;
+    await record.save();
+
+    //  Check user is exit or not
+    let exists = await User.findOne({ email });
+    let response: VerifyOtpResponse = {
+      status: true,
+      message: 'OTP Verified',
+    };
+    if (exists) {
+      const token = signUserToken(exists);
+      response.token = token;
+      response.user = exists;
+    }
+
+    res.status(200).json(response);
+  } catch (err) {
+    console.error('VERIFY OTP ERROR:', err);
+    res.status(500).json({ status: false, message: 'OTP Verification Failed' });
+  }
 });
 
-const loginSchema = z.object({
-  emailOrPhone: z.string(),
-  password: z.string(),
-});
+/* ---------------------------------------------------------
+   📌 3. COMPLETE PROFILE (Register User)
+---------------------------------------------------------- */
 
-router.post('/login', async (req, res) => {
-  const parsed = loginSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json(parsed.error);
-  const { emailOrPhone, password } = parsed.data;
+router.post('/complete-profile', async (req, res) => {
+  try {
+    const schema = z.object({
+      email: z.string().email(),
+      gender: z.string().optional(),
+      name: z.string().min(2),
+      role: z.enum(['PARENT', 'CHILD', 'EMPLOYEE']),
+      phone: z.string().optional(),
+    });
 
-  const user = await User.findOne({
-    $or: [{ email: emailOrPhone }, { phone: emailOrPhone }],
-  }).select('+password');
-  if (!user)
-    return res
-      .status(401)
-      .json({ status: false, message: 'Invalid credentials' });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json(parsed.error);
+    // tempToken,
+    const { name, role, phone, email, gender } = parsed.data;
 
-  const match = await user.comparePassword(password);
-  if (!match)
-    return res
-      .status(401)
-      .json({ status: false, message: 'Invalid credentials' });
+    // Verify temporary token
+    // const decoded: any = verifyToken(tempToken);
 
-  const token = signJWT(user);
-  res.json({
-    status: true,
-    token,
-    user: { id: user._id, name: user.name, role: user.role },
-  });
+    // if (!decoded.temp)
+    //   return res.json({ status: false, message: 'Invalid temp token' });
+
+    // const email = decoded.email;
+
+    // If user already exists → return directly
+    let exists = await Otp.findOne({ email, verified: true });
+
+    if (!exists) {
+      return res.json({
+        status: false,
+        message: 'Email is not Verifu',
+      });
+    }
+
+    // Create new user
+    const user = await User.create({
+      name,
+      email,
+      role,
+      phone,
+      gender,
+    });
+
+    // Generate final login token
+    const token = signUserToken(user);
+
+    res.json({
+      status: true,
+      message: 'Profile Completed',
+      token,
+      user,
+    });
+  } catch (err) {
+    console.error('COMPLETE PROFILE ERROR:', err);
+    res
+      .status(500)
+      .json({ status: false, message: 'Failed to complete profile' });
+  }
 });
 
 export default router;

@@ -6,7 +6,7 @@ import authRoutes from './auth.routes.js';
 // import geofenceRoutes from './geofence.routes.js';
 
 const router = Router();
-router.use('/auth', authRoutes);
+router.use('/auth/v1', authRoutes);
 // router.use('/link', linkRoutes);
 // router.use('/device', deviceRoutes);
 // router.use('/tracking', trackingRoutes);
