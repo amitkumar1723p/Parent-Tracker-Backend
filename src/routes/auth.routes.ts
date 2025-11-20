@@ -37,6 +37,7 @@ router.post('/send-otp', async (req, res) => {
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+     console.log(otp ,"otp")
 
     // Remove existing OTP (cleanup)
     await Otp.deleteMany({ email });
@@ -105,7 +106,7 @@ router.post('/verify-otp', async (req, res) => {
     await record.save();
 
     //  Check user is exit or not
-    let exists = await User.findOne({ email });
+    let exists = await User.findOne({ email }).lean();;
     let response: VerifyOtpResponse = {
       status: true,
       message: 'OTP Verified',
@@ -128,35 +129,50 @@ router.post('/verify-otp', async (req, res) => {
 ---------------------------------------------------------- */
 
 router.post('/complete-profile', async (req, res) => {
+
   try {
+
     const schema = z.object({
       email: z.string().email(),
       gender: z.string().optional(),
       name: z.string().min(2),
-      role: z.enum(['PARENT', 'CHILD', 'EMPLOYEE']),
+      role: z.enum(['parent', 'child',]),
       phone: z.string().optional(),
     });
 
+
+
+
+
+
     const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json(parsed.error);
+
+    if (!parsed.success) return res.status(400).json({
+       success: false,
+        message: 'Invalid input',
+        errors: parsed.error, // optional
+    });
     // tempToken,
     const { name, role, phone, email, gender } = parsed.data;
 
-    // Verify temporary token
-    // const decoded: any = verifyToken(tempToken);
 
-    // if (!decoded.temp)
-    //   return res.json({ status: false, message: 'Invalid temp token' });
 
-    // const email = decoded.email;
+    //  check user  is all ready exit ya not
+    let  isExitUer = await User.findOne({ email}).lean();
+      if(isExitUer){
+        return  res.status(409).json({
+        status: false,
+         message: 'User already exists'
+      });
+      }
 
-    // If user already exists → return directly
-    let exists = await Otp.findOne({ email, verified: true });
+
+    let exists = await Otp.findOne({ email, verified: true }).lean();;
 
     if (!exists) {
-      return res.json({
+      return  res.status(400).json({
         status: false,
-        message: 'Email is not Verifu',
+        message: 'Email is not Verify',
       });
     }
 
@@ -168,11 +184,13 @@ router.post('/complete-profile', async (req, res) => {
       phone,
       gender,
     });
+        await Otp.deleteOne({ email, verified: true });
 
     // Generate final login token
     const token = signUserToken(user);
+        console.log(user ,"user")
 
-    res.json({
+    res.status(200).json({
       status: true,
       message: 'Profile Completed',
       token,

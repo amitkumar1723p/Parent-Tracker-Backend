@@ -4,7 +4,7 @@
 
 import mongoose, { Document, Schema } from 'mongoose';
 
-export type UserRole = 'PARENT' | 'CHILD' | 'EMPLOYEE';
+export type UserRole = 'parent' | 'child'
 
 // Interface defining what fields a user will have
 export interface IUser extends Document {
@@ -27,7 +27,7 @@ const UserSchema = new Schema<IUser>(
 
     role: {
       type: String,
-      enum: ['PARENT', 'CHILD', 'EMPLOYEE'],
+      enum: ['parent', 'child', ],
       required: true,
     },
 
