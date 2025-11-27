@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    // ✅ JavaScript version jisme code convert hoga
+    "target": "ES2021",
+
+    // ✅ Code ka output kis module system me ho
+    // ES2020 = import/export syntax
+    "module": "ES2020",
+
+    // ✅ Node.js ke hisaab se module resolve karega
+    "moduleResolution": "node",
+
+    // ✅ TypeScript compile hone ke baad files kaha jaye
+    "outDir": "dist",
+
+    // ✅ Source code kaha pada hai
+    "rootDir": "src",
+
+    // ✅ CommonJS modules ko bhi import syntax se support
+    // (require() aur import dono ka mix support)
+    "esModuleInterop": true,
+
+    // ✅ File name casing strict rakhta hai
+    // Linux & Windows me confusion nahi hoga
+    "forceConsistentCasingInFileNames": true,
+
+    // ✅ Strict Type Checking -> Errors jaldi mil jate
+    "strict": true,
+
+    // ✅ 3rd-party libraries ki type checking skip
+    // Isse build fast hota hai
+    "skipLibCheck": true,
+
+    // ✅ JSON files ko import kar sakte ho
+    "resolveJsonModule": true
+  },
+
+  // ✅ Sirf src folder ke andar wali files compile
+  "include": ["src"]
+}
