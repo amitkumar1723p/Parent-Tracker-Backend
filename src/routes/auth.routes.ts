@@ -162,13 +162,13 @@ router.post('/complete-profile',
 
 
       //  check user  is all ready exit ya not
-      let isExitUer = await User.findOne({ email }).lean();
-      if (isExitUer) {
-        return res.status(409).json({
-          status: false,
-          message: 'User already exists'
-        });
-      }
+      // let isExitUer = await User.findOne({ email }).lean();
+      // if (isExitUer) {
+      //   return res.status(409).json({
+      //     status: false,
+      //     message: 'User already exists'
+      //   });
+      // }
 
 
       let exists = await Otp.findOne({ email, verified: true }).lean();;
@@ -197,7 +197,7 @@ router.post('/complete-profile',
         gender,
         avatarUrl: profilePhotoUrl
       });
-      await Otp.deleteOne({ email, verified: true });
+      // await Otp.deleteOne({ email, verified: true });
 
       // Generate final login token
       const AuthenticationToken = signUserToken(user);

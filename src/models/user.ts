@@ -27,7 +27,7 @@ const UserSchema = new Schema<IUser>(
 
     role: {
       type: String,
-      enum: ['parent', 'child', ],
+      enum: ['parent', 'child',],
       required: true,
     },
 
