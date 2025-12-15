@@ -15,7 +15,11 @@ export interface IUser extends Document {
   role: UserRole;
   avatarUrl?: string;
   gender?: string;
+  // parent-only
   inviteCode?: string; // ⭐ New field
+  children?: mongoose.Types.ObjectId[];
+  // child-only
+  parentId?: mongoose.Types.ObjectId;
 }
 
 // Mongoose schema for User collection
@@ -35,12 +39,26 @@ const UserSchema = new Schema<IUser>(
     gender: { type: String },
     avatarUrl: String, // optional
 
-
-    // ⭐ Parent Invite Code
+    // parent field --- start
     inviteCode: {
       type: String,
       unique: true,
       sparse: true, // allow null for child users
+    },
+
+    children: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    }],
+
+    // parent field --- end
+
+
+    // 👶 Child fields
+    parentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
     },
   },
   { timestamps: true }

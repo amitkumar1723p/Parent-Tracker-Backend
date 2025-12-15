@@ -1,7 +1,7 @@
 
 import jwt from 'jsonwebtoken';
 
-const SECRET = process.env.JWT_SECRET || 'supersecret';
+const SECRET = process.env.JWT_SECRET as string;
 
 export function signTempToken(email: string) {
   return jwt.sign({ email, temp: true }, SECRET, { expiresIn: '10m' });
