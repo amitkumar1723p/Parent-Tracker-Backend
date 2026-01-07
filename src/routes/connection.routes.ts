@@ -3,7 +3,8 @@ import User from "../models/user";
 import ConnectionRequest from "../models/ConnectionRequest";
 import { verifyUser } from "../middlewares/authMiddleware";
 import mongoose from "mongoose";
-
+import { sendPush } from "../services/notificationService";
+import Notification from "../models/Notification";
 const router = Router();
 
 /**
@@ -15,11 +16,12 @@ router.post(
     async (req: any, res: Response) => {
         try {
 
-            const child = req.user;
-            console.log(child, "child")
+            const child = req?.user;
+            console.log('running code ...')
+
             const { inviteCode } = req.body;
 
-            if (child.role !== "child") {
+            if (child?.role !== "child") {
                 return res.status(403).json({ message: "Only child can request" });
             }
 
@@ -34,7 +36,7 @@ router.post(
 
             // Already connected
             const isValidChild = await User.exists({
-                _id: req.user.id,
+                _id: req?.user?.id,
                 role: "child",
                 parentId: { $exists: true, $ne: null }
             });
@@ -47,25 +49,72 @@ router.post(
 
             // Existing pending request
             const existing = await ConnectionRequest.findOne({
-                parentId: parent._id,
-                childId: child.id,
+                parentId: parent?._id,
+                childId: child?.id,
                 status: "pending",
             });
 
+            console.log('before notifyParent ...')
+
+            // 🔔 common notification logic   --- start
+            const notifyParent = () =>
+                Promise.all([
+                    Notification.create({
+                        userId: parent._id,
+                        title: "You have a new connection",
+                        body: `${child.name} wants to stay connected with you`,
+                        data: {
+                            type: "CONNECTION_REQUEST",
+                            childId: child._id,
+                        },
+                    }),
+                    sendPush(
+                        parent.fcmTokens || [],
+                        "You have a new connection",
+                        `${child.name} wants to stay connected with you on SafeTracker`,
+                        {
+                            type: "CONNECTION_REQUEST",
+                            childId: child?._id?.toString() || '',
+                        }
+                    ),
+                ]);
+
+
+            console.log("all redy set conection")
             if (existing) {
+                if (existing) {
+                    await notifyParent();
+                    return res.status(200).json({
+                        message: "Connection request already sent",
+                    });
+                }
+
+
                 return res.status(200).json({
                     message: "Connection request already sent",
                 });
             }
 
+
             await ConnectionRequest.create({
-                parentId: parent._id,
-                childId: child.id,
+                parentId: parent?._id,
+                childId: child?.id,
                 expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min
             });
 
-            // 🔔 Later: send push notification to parent
 
+
+            console.log("new connection hit notify")
+
+            // 🚀 Non-critical async work
+            await notifyParent();
+
+
+
+
+
+
+            // 🔔 Later: send push notification to parent
             return res.status(200).json({
                 message: "Connection request sent to parent",
             });
@@ -195,5 +244,10 @@ router.post(
         res.json({ message: "Connection rejected" });
     }
 );
+
+
+
+
+
 
 export default router;

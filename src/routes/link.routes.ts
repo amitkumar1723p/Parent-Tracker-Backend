@@ -14,13 +14,12 @@ router.post("/connect-parent", verifyUser, async (req: any, res: Response) => {
 
 
     try {
-        console.log("connect-parent api call")
-        console.log(req.user, "req.user")
+
 
         const child = req.user;
         const { inviteCode } = req.body;
 
-        console.log(inviteCode, "inviteCode")
+
 
         if (!inviteCode) {
             return res.status(400).json({
@@ -41,21 +40,11 @@ router.post("/connect-parent", verifyUser, async (req: any, res: Response) => {
 
 
 
-        // // // Ensure child is valid role
-        // const child = await User.findById(childId);
-        // if (!child || child.role !== "child") {
-        //     return res.status(400).json({
-        //         status: false,
-        //         message: "Only children can connect with invite code",
-        //     });
-        // }
-
-
         // Prevent duplicate connection
 
 
 
-        if (child.parentId && child.parentId.toString() === parent._id.toString()) {
+        if (child?.parentId && child?.parentId?.toString() === parent?._id?.toString()) {
             return res.status(200).json({
                 status: true,
                 message: "Child already connected to this parent",

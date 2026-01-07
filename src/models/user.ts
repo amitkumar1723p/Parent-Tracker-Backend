@@ -20,6 +20,7 @@ export interface IUser extends Document {
   children?: mongoose.Types.ObjectId[];
   // child-only
   parentId?: mongoose.Types.ObjectId;
+  fcmTokens?: string[];
 }
 
 // Mongoose schema for User collection
@@ -60,6 +61,9 @@ const UserSchema = new Schema<IUser>(
       ref: 'User',
       index: true,
     },
+
+
+    fcmTokens: { type: [String], default: [] }
   },
   { timestamps: true }
 );

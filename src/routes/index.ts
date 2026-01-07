@@ -2,17 +2,35 @@ import { Router } from 'express';
 import authRoutes from './auth.routes.js';
 
 import connection from './connection.routes.js'
-// import deviceRoutes from './device.routes.js';
-// import trackingRoutes from './tracking.routes.js';
-// import geofenceRoutes from './geofence.routes.js';
+import notification from './notification.routes.js'
+import { verifyUser } from '../middlewares/authMiddleware.js';
+import user from '../models/user.js';
+
 
 const router = Router();
 router.use('/auth/v1', authRoutes);
 router.use('/connection/v1', connection);
+router.use('/notification/v1', notification);
 
-// router.use('/device', deviceRoutes);
-// router.use('/tracking', trackingRoutes);
-// router.use('/geofence', geofenceRoutes);
+//  Genrate FireBase Token  ----- start
+
+
+router.post("/user/fcm-token", verifyUser, async (req: any, res) => {
+    const { token } = req.body;
+    console.log("📲 Saving token for user:", req.user.id);
+    console.log("📲 Token:", token);
+    await user.updateOne(
+        { _id: req.user.id },
+        { $addToSet: { fcmTokens: token } }
+    );
+
+    res.json({ success: true });
+});
+
+
+//   Genrate FireBase Token  ------- end
+
+
 
 export default router;
 //   # combines all routes

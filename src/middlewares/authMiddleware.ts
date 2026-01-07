@@ -6,7 +6,6 @@ const SECRET = process.env.JWT_SECRET as string;
 export function verifyUser(req: Request & { user?: any }, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         status: false,
@@ -17,7 +16,6 @@ export function verifyUser(req: Request & { user?: any }, res: Response, next: N
     const token = authHeader.split(" ")[1];
 
     const decoded = jwt.verify(token, SECRET) as any;
-    console.log(decoded, "decoded")
     if (!decoded || !decoded.id) {
       return res.status(401).json({
         status: false,
