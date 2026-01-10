@@ -3,6 +3,7 @@
 // ✔ Works perfectly with OTP-based auth (no password required)
 
 import mongoose, { Document, Schema } from 'mongoose';
+import { boolean } from 'zod';
 
 export type UserRole = 'parent' | 'child'
 
@@ -21,6 +22,7 @@ export interface IUser extends Document {
   // child-only
   parentId?: mongoose.Types.ObjectId;
   fcmTokens?: string[];
+  isBlocked?: boolean
 }
 
 // Mongoose schema for User collection
@@ -62,6 +64,10 @@ const UserSchema = new Schema<IUser>(
       index: true,
     },
 
+    isBlocked: {
+      type: Boolean,
+
+    },
 
     fcmTokens: { type: [String], default: [] }
   },

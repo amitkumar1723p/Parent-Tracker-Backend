@@ -28,6 +28,10 @@ router.post("/user/fcm-token", verifyUser, async (req: any, res) => {
 });
 
 
+
+
+
+
 //   Genrate FireBase Token  ------- end
 
 

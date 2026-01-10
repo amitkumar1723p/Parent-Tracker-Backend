@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import User from "../models/user";
-import ConnectionRequest from "../models/ConnectionRequest";
+import ConnectionRequest from "../models/connectionrequest";
 import { verifyUser } from "../middlewares/authMiddleware";
 import mongoose from "mongoose";
 import { sendPush } from "../services/notificationService";

@@ -1,19 +1,15 @@
-// src/routes/auth.routes.ts
-// ✔ COMPLETE AUTH ROUTES FOR OTP LOGIN
-// ✔ /send-otp → generate + send OTP
-// ✔ /verify-otp → verify OTP + return temp token
-// ✔ /complete-profile → final user creation + JWT token
-
 
 import { Router } from "express";
 import { z } from 'zod';
+
 import { upload } from "../middlewares/upload";
 import Otp from '../models/Otp';
 import User from '../models/user';
-import { signUserToken } from '../utils/jwt.js';
+import { signAccessToken, signRefreshToken } from '../utils/jwt.js';
 import { sendOtpEmail } from '../utils/mail';
 import { uploadToS3 } from "../utils/uploadToS3";
-
+import jwt from "jsonwebtoken";
+import RefreshToken from "../models/refreshtoken";
 const router = Router();
 
 /* ---------------------------------------------------------
@@ -22,10 +18,10 @@ const router = Router();
 
 router.post('/send-otp', async (req, res) => {
   try {
-    console.log('send otp');
     const bodySchema = z.object({
       email: z.string().email(),
     });
+
 
     const parsed = bodySchema.safeParse(req.body);
 
@@ -39,7 +35,7 @@ router.post('/send-otp', async (req, res) => {
     const { email } = parsed.data;
 
     // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000)?.toString();
     console.log(otp, "otp")
 
     // Remove existing OTP (cleanup)
@@ -52,8 +48,7 @@ router.post('/send-otp', async (req, res) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
-    // TODO: Send email via nodemailer
-    // console.log('📩 OTP for', email, '=', otp);
+
     await sendOtpEmail(email, otp); // <<--- real email send
 
     res.status(200).json({
@@ -73,6 +68,7 @@ router.post('/send-otp', async (req, res) => {
 interface VerifyOtpResponse {
   status: boolean;
   message: string;
+  refreshToken?: string;
   AuthenticationToken?: string;
   user?: any;
 }
@@ -83,7 +79,7 @@ router.post('/verify-otp', async (req, res) => {
       otp: z.string().length(6),
     });
 
-    //  console.log(req.body ,"req.body")
+
     const parsed = schema.safeParse(req.body);
 
     if (!parsed.success)
@@ -115,10 +111,17 @@ router.post('/verify-otp', async (req, res) => {
       message: 'OTP Verified',
     };
     if (exists) {
-      const AuthenticationToken = signUserToken(exists);
-      response.AuthenticationToken = AuthenticationToken;
+
+      const accessToken = signAccessToken(exists);
+      const refreshToken = signRefreshToken(exists);
+
+      response.AuthenticationToken = accessToken;
+      response.refreshToken = refreshToken;
       response.user = exists;
+
     }
+
+
 
     res.status(200).json(response);
   } catch (err) {
@@ -158,7 +161,7 @@ router.post('/complete-profile',
       });
 
 
-      console.log(req.body, "req.body")
+
 
 
 
@@ -216,13 +219,13 @@ router.post('/complete-profile',
 
 
       // Generate final login token
-      const AuthenticationToken = signUserToken(user);
-
+      const accessToken = signAccessToken(user);
+      const refreshToken = signRefreshToken(user);
 
       res.status(200).json({
         status: true,
         message: 'Profile Completed',
-        AuthenticationToken,
+        AuthenticationToken: accessToken,
         user: {
           name,
           email,
@@ -232,6 +235,7 @@ router.post('/complete-profile',
           avatarUrl: profilePhotoUrl,
           inviteCode,
         },
+        refreshToken
       });
     } catch (err) {
       console.error('COMPLETE PROFILE ERROR:', err);
@@ -244,6 +248,44 @@ router.post('/complete-profile',
 
 
 
+
+
+
+router.post("/refresh", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    if (!auth?.startsWith("Bearer ")) {
+      return res.status(401).json({ code: "REFRESH_MISSING" });
+    }
+
+    const refreshToken = auth.split(" ")[1];
+
+    const payload: any = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_SECRET!
+    );
+
+    const stored = await RefreshToken.findOne({
+      userId: payload.id,
+      token: refreshToken,
+    });
+
+    if (!stored) {
+      return res.status(401).json({ code: "REFRESH_INVALID" });
+    }
+
+    const user = await User.findById(payload.id);
+    if (!user || user.isBlocked) {
+      return res.status(403).json({ code: "USER_BLOCKED" });
+    }
+
+    const newAccessToken = signAccessToken(user);
+
+    return res.json({ accessToken: newAccessToken });
+  } catch (err) {
+    return res.status(401).json({ code: "REFRESH_EXPIRED" });
+  }
+});
 
 
 

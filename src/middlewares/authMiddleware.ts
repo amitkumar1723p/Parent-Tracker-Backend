@@ -3,33 +3,40 @@ import jwt from "jsonwebtoken";
 
 const SECRET = process.env.JWT_SECRET as string;
 
-export function verifyUser(req: Request & { user?: any }, res: Response, next: NextFunction) {
+export function verifyUser(
+  req: Request & { user?: any },
+  res: Response,
+  next: NextFunction
+) {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.log(authHeader, "authHeader")
+    if (!authHeader?.startsWith("Bearer ")) {
       return res.status(401).json({
-        status: false,
-        message: "Authorization token missing",
+        code: "TOKEN_MISSING",
       });
     }
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, SECRET) as any;
-    if (!decoded || !decoded.id) {
+    const decoded = jwt.verify(
+      token,
+      process.env.ACCESS_SECRET!
+    ) as any;
+
+    req.user = decoded;
+    next();
+  } catch (error: any) {
+    // 👇 VERY IMPORTANT
+    if (error.name === "TokenExpiredError") {
       return res.status(401).json({
-        status: false,
-        message: "Invalid token",
+        code: "TOKEN_EXPIRED", // 🔥 frontend refresh karega
       });
     }
 
-    req.user = decoded; // store decoded user details in req.user
-    next();
-  } catch (error) {
-    console.log("AUTH ERROR:", error);
     return res.status(401).json({
-      status: false,
-      message: "Unauthorized or token expired",
+      code: "TOKEN_INVALID", // 🔥 frontend logout karega
     });
   }
 }
+
