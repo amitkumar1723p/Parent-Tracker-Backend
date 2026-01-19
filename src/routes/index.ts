@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import authRoutes from './auth.routes.js';
 
 import connection from './connection.routes.js'
@@ -15,12 +15,12 @@ router.use('/notification/v1', notification);
 //  Genrate FireBase Token  ----- start
 
 
-router.post("/user/fcm-token", verifyUser, async (req: any, res) => {
+router.post("/user/fcm-token", verifyUser(), async (req: any, res: Response) => {
     const { token } = req.body;
-    console.log("📲 Saving token for user:", req.user.id);
+    console.log("📲 Saving token for user:", req.user._id);
     console.log("📲 Token:", token);
     await user.updateOne(
-        { _id: req.user.id },
+        { _id: req.user._id },
         { $addToSet: { fcmTokens: token } }
     );
 

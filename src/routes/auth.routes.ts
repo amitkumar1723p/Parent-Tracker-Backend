@@ -114,6 +114,14 @@ router.post('/verify-otp', async (req, res) => {
 
       const accessToken = signAccessToken(exists);
       const refreshToken = signRefreshToken(exists);
+      console.log('accessToken', accessToken)
+      console.log('refreshToken', refreshToken)
+      await RefreshToken.deleteMany({ userId: exists._id });
+      await RefreshToken.create({
+        userId: exists._id,
+        token: refreshToken,
+      });
+
 
       response.AuthenticationToken = accessToken;
       response.refreshToken = refreshToken;
@@ -222,6 +230,12 @@ router.post('/complete-profile',
       const accessToken = signAccessToken(user);
       const refreshToken = signRefreshToken(user);
 
+
+      await RefreshToken.deleteMany({ userId: user._id });
+      await RefreshToken.create({
+        userId: user._id,
+        token: refreshToken,
+      });
       res.status(200).json({
         status: true,
         message: 'Profile Completed',
@@ -259,30 +273,34 @@ router.post("/refresh", async (req, res) => {
     }
 
     const refreshToken = auth.split(" ")[1];
-
+    console.log(refreshToken, "refress token")
+    console.log(process.env.REFRESH_SECRET, "REFRESH_SECRET")
     const payload: any = jwt.verify(
       refreshToken,
       process.env.REFRESH_SECRET!
     );
-
+    console.log(payload, "payload")
+    console.log("refress token")
     const stored = await RefreshToken.findOne({
-      userId: payload.id,
+      userId: payload?._id,
       token: refreshToken,
     });
 
+    console.log(stored, "sstored")
     if (!stored) {
       return res.status(401).json({ code: "REFRESH_INVALID" });
     }
 
-    const user = await User.findById(payload.id);
+    const user = await User.findById(payload._id);
     if (!user || user.isBlocked) {
       return res.status(403).json({ code: "USER_BLOCKED" });
     }
 
     const newAccessToken = signAccessToken(user);
-
+    console.log("accessToken", newAccessToken)
     return res.json({ accessToken: newAccessToken });
   } catch (err) {
+    console.log(err, "err")
     return res.status(401).json({ code: "REFRESH_EXPIRED" });
   }
 });

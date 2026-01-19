@@ -28,11 +28,11 @@ const ConnectionRequestSchema = new Schema<IConnectionRequest>(
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
-    expiresAt: {
-      type: Date,
-      required: true,
-      index: { expires: "10m" }, // ⏱ auto delete after 10 min
-    },
+    // expiresAt: {
+    //   type: Date,
+    //   required: true,
+    //   index: { expires: "10m" }, // ⏱ auto delete after 10 min
+    // },
   },
   { timestamps: true }
 );

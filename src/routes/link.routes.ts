@@ -10,7 +10,7 @@ const router = Router();
  * Endpoint: POST /connect-parent
  */
 
-router.post("/connect-parent", verifyUser, async (req: any, res: Response) => {
+router.post("/connect-parent", verifyUser(), async (req: any, res: Response) => {
 
 
     try {
@@ -54,7 +54,7 @@ router.post("/connect-parent", verifyUser, async (req: any, res: Response) => {
 
         // ✅ Direct child update (NO FETCH)
         await User.updateOne(
-            { _id: req.user.id },
+            { _id: req.user._id },
             { $set: { parentId: parent._id } }
         );
 
@@ -67,8 +67,8 @@ router.post("/connect-parent", verifyUser, async (req: any, res: Response) => {
         if (!parent.children) parent.children = [];
 
 
-        if (!parent.children.includes(req.user.id)) {
-            parent.children.push(req.user.id);
+        if (!parent.children.includes(req.user._id)) {
+            parent.children.push(req.user._id);
             await parent.save();
         }
 

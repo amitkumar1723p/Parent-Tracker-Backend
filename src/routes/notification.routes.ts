@@ -7,10 +7,10 @@ import { verifyUser } from "../middlewares/authMiddleware";
 const router = Router();
 router.get(
     "/get-me",
-    verifyUser,
+    verifyUser(),
     async (req, res) => {
         const notifications = await Notification.find({
-            userId: req?.user?.id,
+            userId: req?.user?._id,
         })
             .sort({ createdAt: -1 })
             .limit(50);

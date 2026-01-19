@@ -19,17 +19,17 @@ export function verifyToken(token: string) {
 
 export const signAccessToken = (user: any) =>
   jwt.sign({
-    id: user._id,
+    _id: user._id,
     role: user.role,
     name: user.name,
     email: user.email,
   }, process.env.ACCESS_SECRET!, {
-    expiresIn: "1m",
+    expiresIn: "7d",
   });
 
 export const signRefreshToken = (user: any) =>
   jwt.sign({
-    id: user._id,
+    _id: user._id,
     role: user.role,
     name: user.name,
     email: user.email,

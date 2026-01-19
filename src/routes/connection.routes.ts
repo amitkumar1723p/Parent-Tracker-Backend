@@ -10,138 +10,121 @@ const router = Router();
 /**
  * 👶 Child sends connection request
  */
-router.post(
-    "/request-parent",
-    verifyUser,
-    async (req: any, res: Response) => {
-        try {
+router.post("/request-parent", verifyUser(), async (req: any, res: Response) => {
+    try {
+        const child = req.user;
+        const { inviteCode } = req.body;
 
-            const child = req?.user;
-            console.log('running code ...')
+        if (child?.role !== "child") {
+            return res.status(403).json({ message: "Only child can request" });
+        }
 
-            const { inviteCode } = req.body;
+        if (!inviteCode) {
+            return res.status(400).json({ message: "Invite code required" });
+        }
 
-            if (child?.role !== "child") {
-                return res.status(403).json({ message: "Only child can request" });
-            }
+        const parent = await User.findOne({ inviteCode, role: "parent" });
+        if (!parent) {
+            return res.status(404).json({ message: "Invalid invite code" });
+        }
 
-            if (!inviteCode) {
-                return res.status(400).json({ message: "Invite code required" });
-            }
+        // ✅ If already connected
+        const isConnected = await User.exists({
+            _id: child._id,
+            role: "child",
+            parentId: { $exists: true, $ne: null },
+        });
 
-            const parent = await User.findOne({ inviteCode, role: "parent" });
-            if (!parent) {
-                return res.status(404).json({ message: "Invalid invite code" });
-            }
+        if (isConnected) {
+            return res.status(400).json({ message: "Child already connected to a parent" });
+        }
 
-            // Already connected
-            const isValidChild = await User.exists({
-                _id: req?.user?.id,
-                role: "child",
-                parentId: { $exists: true, $ne: null }
-            });
+        // 🔔 notify parent function (same as yours)
+        const notifyParent = () =>
+            Promise.all([
+                Notification.create({
+                    userId: parent._id,
+                    title: "You have a new connection",
+                    body: `${child.name} wants to stay connected with you`,
+                    data: {
+                        type: "CONNECTION_REQUEST",
+                        childId: child._id,
+                    },
+                }),
+                sendPush(
+                    parent.fcmTokens || [],
+                    "You have a new connection",
+                    `${child.name} wants to stay connected with you on SafeTracker`,
+                    {
+                        type: "CONNECTION_REQUEST",
+                        childId: child._id.toString(),
+                    }
+                ),
+            ]);
 
-            if (isValidChild) {
-                return res.status(400).json({
-                    message: "Child already connected to a parent",
-                });
-            }
+        // ✅ Find ANY old request (pending/rejected)
+        const existingRequest = await ConnectionRequest.findOne({
+            parentId: parent._id,
+            childId: child._id,
+        });
 
-            // Existing pending request
-            const existing = await ConnectionRequest.findOne({
-                parentId: parent?._id,
-                childId: child?.id,
-                status: "pending",
-            });
+        // ✅ If already pending → don't create again
+        if (existingRequest?.status === "pending") {
+            await notifyParent();
+            return res.status(200).json({ message: "Connection request already sent" });
+        }
 
-            console.log('before notifyParent ...')
+        // ✅ If rejected → convert back to pending
+        if (existingRequest?.status === "rejected") {
+            existingRequest.status = "pending";
+            await existingRequest.save();
 
-            // 🔔 common notification logic   --- start
-            const notifyParent = () =>
-                Promise.all([
-                    Notification.create({
-                        userId: parent._id,
-                        title: "You have a new connection",
-                        body: `${child.name} wants to stay connected with you`,
-                        data: {
-                            type: "CONNECTION_REQUEST",
-                            childId: child._id,
-                        },
-                    }),
-                    sendPush(
-                        parent.fcmTokens || [],
-                        "You have a new connection",
-                        `${child.name} wants to stay connected with you on SafeTracker`,
-                        {
-                            type: "CONNECTION_REQUEST",
-                            childId: child?._id?.toString() || '',
-                        }
-                    ),
-                ]);
-
-
-            console.log("all redy set conection")
-            if (existing) {
-                if (existing) {
-                    await notifyParent();
-                    return res.status(200).json({
-                        message: "Connection request already sent",
-                    });
-                }
-
-
-                return res.status(200).json({
-                    message: "Connection request already sent",
-                });
-            }
-
-
-            await ConnectionRequest.create({
-                parentId: parent?._id,
-                childId: child?.id,
-                expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min
-            });
-
-
-
-            console.log("new connection hit notify")
-
-            // 🚀 Non-critical async work
             await notifyParent();
 
-
-
-
-
-
-            // 🔔 Later: send push notification to parent
             return res.status(200).json({
-                message: "Connection request sent to parent",
+                message: "Connection request sent again",
             });
-        } catch (err) {
-            console.log(err, "err")
-            return res.status(500).json({ message: "Server error" });
         }
+
+        // ✅ If approved (rare case, but safe)
+        if (existingRequest?.status === "approved") {
+            return res.status(400).json({
+                message: "Request already approved previously",
+            });
+        }
+
+        // ✅ If no request exists → create new
+        await ConnectionRequest.create({
+            parentId: parent._id,
+            childId: child._id,
+            status: "pending",
+        });
+
+        await notifyParent();
+
+        return res.status(200).json({ message: "Connection request sent to parent" });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Server error" });
     }
-);
+});
+
 
 
 
 
 router.get(
     "/parent/connection-requests",
-    verifyUser,
+    verifyUser('parent'),
     async (req: any, res: Response) => {
         try {
-            if (req.user.role !== "parent") {
-                return res.status(403).json({ message: "Only parent allowed" });
-            }
+
 
             const requests = await ConnectionRequest.aggregate([
                 // 1️⃣ Match parent + pending
                 {
                     $match: {
-                        parentId: new mongoose.Types.ObjectId(req.user.id),
+                        parentId: new mongoose.Types.ObjectId(req.user._id),
                         status: "pending",
                     },
                 },
@@ -197,34 +180,41 @@ router.get(
  */
 router.post(
     "/approve-connection",
-    verifyUser,
+    verifyUser("parent"),
     async (req: any, res: Response) => {
-        const { requestId } = req.body;
 
-        if (req.user.role !== "parent") {
-            return res.status(403).json({ message: "Only parent allowed" });
+
+        try {
+            const { childId } = req.body;
+            console.log(req.body, "req.body")
+            const request = await ConnectionRequest.findOne({ childId: childId });
+            if (!request || request.status !== "pending") {
+                return res.status(404).json({ message: "Request not found" });
+            }
+
+            // Link both users
+            await User.updateOne(
+                { _id: request.childId },
+                { parentId: request.parentId }
+            );
+
+            await User.updateOne(
+                { _id: request.parentId },
+                { $addToSet: { children: request.childId } }
+            );
+
+            request.status = "approved";
+            await request.save();
+
+            return res.status(200).json({ message: "Connection approved" });
+
+        } catch (error) {
+            console.log(error, "error")
+            res.status(500).json({ message: "Server error" });
         }
 
-        const request = await ConnectionRequest.findById(requestId);
-        if (!request || request.status !== "pending") {
-            return res.status(404).json({ message: "Request not found" });
-        }
 
-        // Link both users
-        await User.updateOne(
-            { _id: request.childId },
-            { parentId: request.parentId }
-        );
 
-        await User.updateOne(
-            { _id: request.parentId },
-            { $addToSet: { children: request.childId } }
-        );
-
-        request.status = "approved";
-        await request.save();
-
-        return res.json({ message: "Connection approved" });
     }
 );
 
@@ -233,15 +223,30 @@ router.post(
  */
 router.post(
     "/reject-connection",
-    verifyUser,
+    verifyUser("parent"),
     async (req: any, res: Response) => {
-        const { requestId } = req.body;
 
-        await ConnectionRequest.findByIdAndUpdate(requestId, {
-            status: "rejected",
-        });
+        try {
 
-        res.json({ message: "Connection rejected" });
+            const { childId } = req.body;
+            console.log(req.body, "req.body")
+
+            const request = await ConnectionRequest.findOne({ childId: childId });
+            if (!request || request.status !== "pending") {
+                return res.status(404).json({ message: "Request not found" });
+            }
+
+            await ConnectionRequest.findByIdAndUpdate(request?._id, {
+                status: "rejected",
+            });
+
+            res.status(200).json({ message: "Connection rejected" });
+
+        }
+        catch (error) {
+            console.log(error, "error")
+            res.status(500).json({ message: "Server error" });
+        }
     }
 );
 
