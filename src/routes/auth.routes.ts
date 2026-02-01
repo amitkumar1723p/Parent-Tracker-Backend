@@ -36,7 +36,7 @@ router.post('/send-otp', async (req, res) => {
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000)?.toString();
-    console.log(otp, "otp")
+
 
     // Remove existing OTP (cleanup)
     await Otp.deleteMany({ email });
@@ -114,8 +114,7 @@ router.post('/verify-otp', async (req, res) => {
 
       const accessToken = signAccessToken(exists);
       const refreshToken = signRefreshToken(exists);
-      console.log('accessToken', accessToken)
-      console.log('refreshToken', refreshToken)
+
       await RefreshToken.deleteMany({ userId: exists._id });
       await RefreshToken.create({
         userId: exists._id,
@@ -273,20 +272,19 @@ router.post("/refresh", async (req, res) => {
     }
 
     const refreshToken = auth.split(" ")[1];
-    console.log(refreshToken, "refress token")
-    console.log(process.env.REFRESH_SECRET, "REFRESH_SECRET")
+
     const payload: any = jwt.verify(
       refreshToken,
       process.env.REFRESH_SECRET!
     );
-    console.log(payload, "payload")
-    console.log("refress token")
+
+
     const stored = await RefreshToken.findOne({
       userId: payload?._id,
       token: refreshToken,
     });
 
-    console.log(stored, "sstored")
+
     if (!stored) {
       return res.status(401).json({ code: "REFRESH_INVALID" });
     }
@@ -297,7 +295,6 @@ router.post("/refresh", async (req, res) => {
     }
 
     const newAccessToken = signAccessToken(user);
-    console.log("accessToken", newAccessToken)
     return res.json({ accessToken: newAccessToken });
   } catch (err) {
     console.log(err, "err")

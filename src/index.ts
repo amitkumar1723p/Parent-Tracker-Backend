@@ -1,38 +1,38 @@
 // ✅ .env file ko auto load karne ke liye (PORT, etc.)
-import 'dotenv/config';
+import "dotenv/config";
 
 // ✅ HTTP server create karne ke liye (Socket.io support)
-import http from 'http';
+import http from "http";
 
 // ✅ Express framework (API banane ke kaam)
-import express from 'express';
+import express from "express";
 
 // ✅ Cross-origin requests allow karne ke liye
-import cors from 'cors';
+import cors from "cors";
 
 // ✅ Security headers enable (XSS, Clickjacking protections)
-import helmet from 'helmet';
+import helmet from "helmet";
 
 // ✅ Console me request logs show karega
-import morgan from 'morgan';
+import morgan from "morgan";
 
 // ✅ Client se aayi cookies ko access karne ke liye
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
 
 // ✅ MongoDB database connect karne ke liye
-import { connectDB } from './config/db';
+import { connectDB } from "./config/db";
 
 // ✅ Environment variables ka central config
-import { env } from './config/env';
+import { env } from "./config/env";
 
 // ✅ Saare routes ka main entry point
-import router from './routes/index';
+import router from "./routes/index";
 
 // ✅ Custom error handling middleware (404 + server errors)
-import { notFound, onError } from './middlewares/error';
+import { notFound, onError } from "./middlewares/error";
 
 // ✅ Socket.io (real-time functionalities) init karne ke liye
-import { initSocket } from './socket/index';
+import { initSocket } from "./socket/index";
 
 const app = express();
 
@@ -45,16 +45,16 @@ const app = express();
 app.use(helmet());
 
 // ✅ Frontend apps ko is server se connect ki permission
-app.use(
-  cors({
-    // Multiple origins allow kar sakte ho (comma separated)
-    origin: env.CORS_ORIGIN.split(',').map((s) => s.trim()),
-    credentials: true, // cookies ko allow karta hai
-  })
-);
+// app.use(
+//   cors({
+//     // Multiple origins allow kar sakte ho (comma separated)
+//     origin: env.CORS_ORIGIN.split(',').map((s) => s.trim()),
+//     credentials: true, // cookies ko allow karta hai
+//   })
+// );
 
 // ✅ JSON body parsing (max 1MB)
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: "1mb" }));
 
 // ✅ URL encoded form data support
 app.use(express.urlencoded({ extended: true }));
@@ -63,22 +63,30 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ✅ Request log for debugging
-app.use(morgan('dev'));
+app.use(morgan("dev"));
+
+/** ---------------------------------------
+ * 🔌 HTTP + Socket.io Server Start
+ ----------------------------------------*/
+
+// ✅ HTTP server create (Socket.io ke liye zaroori)
+const server = http.createServer(app);
+
+// ✅ Socket.io initialize
+export const io = initSocket(server);
 
 /** ---------------------------------------
  * 🚀 API Routes
  ----------------------------------------*/
 
 // ✅ All APIs → /api se start honge
-app.use('/api', router);
+app.use("/api", router);
 
 /** ---------------------------------------
  * ✅ Health Check Route
  * (Server chal raha hai ya nahi)
  ----------------------------------------*/
-app.get('/health', (_, res) =>
-  res.json({ status: true, message: 'Helth is OK' })
-);
+app.get("/health", (_, res) => res.json({ status: true, message: "Helth is OK" }));
 
 /** ---------------------------------------
  * ❌ 404 + 🛑 Error Handling
@@ -89,16 +97,6 @@ app.use(notFound);
 
 // ✅ Server errors ko handle karega
 app.use(onError);
-
-/** ---------------------------------------
- * 🔌 HTTP + Socket.io Server Start
- ----------------------------------------*/
-
-// ✅ HTTP server create (Socket.io ke liye zaroori)
-const server = http.createServer(app);
-
-// ✅ Socket.io initialize
-initSocket(server);
 
 // ✅ Server start + DB connection
 server.listen(env.PORT, async () => {

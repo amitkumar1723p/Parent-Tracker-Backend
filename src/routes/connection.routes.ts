@@ -186,7 +186,7 @@ router.post(
 
         try {
             const { childId } = req.body;
-            console.log(req.body, "req.body")
+
             const request = await ConnectionRequest.findOne({ childId: childId });
             if (!request || request.status !== "pending") {
                 return res.status(404).json({ message: "Request not found" });
@@ -229,7 +229,7 @@ router.post(
         try {
 
             const { childId } = req.body;
-            console.log(req.body, "req.body")
+
 
             const request = await ConnectionRequest.findOne({ childId: childId });
             if (!request || request.status !== "pending") {
@@ -252,7 +252,7 @@ router.post(
 
 
 
-
+// get All  child  parent wise
 
 
 export default router;

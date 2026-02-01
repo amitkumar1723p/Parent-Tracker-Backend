@@ -5,7 +5,7 @@ export function verifyUser(allowedRoles?: string | string[]) {
   return (req: Request & { user?: any }, res: Response, next: NextFunction) => {
     try {
 
-      console.log('run')
+
       const authHeader = req.headers.authorization;
 
       if (!authHeader?.startsWith("Bearer ")) {
@@ -15,7 +15,7 @@ export function verifyUser(allowedRoles?: string | string[]) {
       const token = authHeader.split(" ")[1];
 
       const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as any;
-      console.log('req.user', 'req.user')
+
       req.user = decoded;
 
       // ✅ Role check (optional)
@@ -29,7 +29,7 @@ export function verifyUser(allowedRoles?: string | string[]) {
           });
         }
       }
-      console.log("next")
+
       next();
     } catch (error: any) {
       console.log(error)

@@ -105,7 +105,7 @@ import admin from "../config/firebaseAdmin";
 
 
 //   // 📊 Success count log (debug / monitoring ke liye)
-//   console.log("Push sent successfully to:", response.successCount, "devices");
+ 
 // }
 
 
@@ -143,7 +143,7 @@ export async function sendPush(
   };
 
   // const response = await admin.messaging().sendEachForMulticast(message);
-  // console.log("Push sent:", response.successCount);
+  
 
   const response = await admin.messaging().sendEachForMulticast(message);
 
