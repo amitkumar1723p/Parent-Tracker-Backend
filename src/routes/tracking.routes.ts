@@ -43,7 +43,7 @@ router.post(
 
 
 
-
+            console.log(req.body, "req.body")
 
             // ✅ Validate lat/lng
             if (typeof lat !== "number" || typeof lng !== "number") {

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dynamic Payslip</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            background: #f4f4f4;
+            color: #333;
+        }
+
+        @media print {
+            .download-btn {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+        }
+
+        .download-wrapper {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .download-btn {
+            background: #0056b3;
+            color: #fff;
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* ===== A4 layout ===== */
+        .payslip-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: auto;
+            background: #fff;
+            padding: 15mm;
+            box-sizing: border-box;
+            border: 1px solid #cfcfcf;
+            page-break-inside: avoid;
+        }
+
+        h2,
+        h3 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 16px;
+        }
+
+        .company-info {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            border: 1px solid #e2e2e2;
+            padding: 9px 12px;
+        }
+
+        th {
+            background: #f6f6f6;
+        }
+
+        .section-header {
+            background: #ececec;
+            font-weight: bold;
+            padding: 9px 12px;
+            margin-bottom: 10px;
+            border-left: 5px solid #0056b3;
+        }
+
+        .net-pay-summary {
+            background: #eaf4ff;
+            border: 1px solid #b8dbff;
+            padding: 14px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* =======================================
+           ✅ PROFESSIONAL SIGNATURE SECTION START
+           ======================================= */
+
+        .signatures {
+            display: flex;
+            justify-content: flex-end;
+            /* right side like real letter */
+            margin-top: 70px;
+        }
+
+        .signature-box {
+            width: 374px;
+            text-align: center
+        }
+
+        /* Blue stamp text */
+        .stamp-text {
+            color: #1f5fd6;
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        /* Signature image */
+        .sign-img {
+            width: 155px;
+            display: block;
+            margin: 0 auto -24px auto;
+
+            /* signature darker */
+            filter: contrast(140%) brightness(85%);
+
+            /* ⭐ BACKGROUND REMOVE MAGIC */
+            mix-blend-mode: multiply;
+        }
+
+        /* Line under signature */
+        .signature-line {
+            border-bottom: 1.4px solid #000;
+            margin: 30px 0 6px;
+        }
+
+        /* Authorised Signatory label */
+        .sign-label {
+            font-size: 13px;
+            font-weight: 600;
+            /* slightly bold */
+        }
+
+        /* =======================================
+           ✅ PROFESSIONAL SIGNATURE SECTION END
+           ======================================= */
+
+        .footer-note {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 11px;
+            color: #999;
+            border-top: 1px dashed #ccc;
+            padding-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Buttons -->
+    <div class="download-wrapper">
+        <button class="download-btn" onclick="loadSlip('nov')">Nov Payslip</button>
+        <button class="download-btn" onclick="loadSlip('dec')">Dec Payslip</button>
+        <button class="download-btn" onclick="loadSlip('jan')">Jan Payslip</button>
+        <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
+    </div>
+
+    <!-- Payslip -->
+    <div class="payslip-container" id="payslip">
+
+        <div class="company-info">
+            <h2 id="companyName">PropFuture AI Technologies Pvt Ltd.</h2>
+            <p id="companyAddress">D-1007 ,Vatika Town Square-1 , Sector 82A, Gurgaon</p>
+        </div>
+
+        <h3 id="monthTitle">Pay Slip – November 2025</h3>
+
+        <div class="section-header">Employee Information & Work Details</div>
+
+        <table>
+            <tr>
+                <th>Employee Name</th>
+                <td id="empName"></td>
+                <th>Designation</th>
+                <td id="designation"></td>
+            </tr>
+            <tr>
+                <th>Date of Joining</th>
+                <td id="doj"></td>
+                <th>Department</th>
+                <td id="department"></td>
+            </tr>
+            <tr>
+                <th>Worked Days</th>
+                <td id="days"></td>
+                <th>Pay Period</th>
+                <td id="period"></td>
+            </tr>
+        </table>
+
+        <div class="section-header">Earnings & Deductions</div>
+
+        <table>
+            <tr>
+                <th>Earnings</th>
+                <th>Amount (₹)</th>
+                <th>Deductions</th>
+                <th>Amount (₹)</th>
+            </tr>
+            <tr>
+                <td>Basic Pay</td>
+                <td id="basic"></td>
+                <td>Provident Fund</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td>House Rent Allowance</td>
+                <td id="hra"></td>
+                <td>Professional Tax</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td>Special Allowance</td>
+                <td id="special"></td>
+                <td>Loan</td>
+                <td>0</td>
+            </tr>
+            <tr style="background:#f0f8ff;font-weight:bold;">
+                <td>Total Earnings</td>
+                <td id="total"></td>
+                <td>Total Deductions</td>
+                <td>0</td>
+            </tr>
+        </table>
+
+        <div class="net-pay-summary">
+            <p id="netPay"></p>
+        </div>
+
+        <!-- ===============================
+             ✅ Signature + Stamp Section
+             =============================== -->
+        <div class="signatures">
+            <div class="signature-box">
+
+                <div class="stamp-text">
+                    For PropFuture AI Technologies Private Limited
+                </div>
+
+                <!-- signature.png (tight cropped image use karo) -->
+                <!-- <img src="./topa.png" class="sign-img" /> -->
+                <canvas id="signCanvas" class="sign-img"></canvas>
+                <div class="signature-line"></div>
+
+                <div class="sign-label">Authorised Signatory</div>
+            </div>
+        </div>
+
+
+
+        <div class="footer-note">
+            *This is a system-generated payslip template.
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        const payslipData = {
+            nov: { month: "November 2025", name: "Neha Kandari", designation: "UI/UX Designer", doj: "22-Oct-2024", department: "IT/Tech Team", days: 26, basic: 20000, hra: 7000, special: 3000 },
+            dec: { month: "December 2025", name: "Neha Kandari", designation: "UI/UX Designer", doj: "22-Oct-2024", department: "IT/Tech Team", days: 27, basic: 20000, hra: 7000, special: 3000 },
+            jan: { month: "January 2026", name: "Neha Kandari", designation: "UI/UX Designer", doj: "22-Oct-2024", department: "IT/Tech Team", days: 27, basic: 20000, hra: 7000, special: 3000 }
+        };
+
+        function loadSlip(key) {
+            const d = payslipData[key];
+
+            document.getElementById("monthTitle").innerText = "Pay Slip – " + d.month;
+            document.getElementById("empName").innerText = d.name;
+            document.getElementById("designation").innerText = d.designation;
+            document.getElementById("doj").innerText = d.doj;
+            document.getElementById("department").innerText = d.department;
+            document.getElementById("days").innerText = d.days + " Days";
+            document.getElementById("period").innerText = d.month;
+
+            document.getElementById("basic").innerText = d.basic;
+            document.getElementById("hra").innerText = d.hra;
+            document.getElementById("special").innerText = d.special;
+
+            const total = d.basic + d.hra + d.special;
+
+            document.getElementById("total").innerText = total;
+            document.getElementById("netPay").innerText = "Net Payable Amount: ₹" + total;
+        }
+
+        loadSlip('nov');
+
+        function downloadPDF() {
+            const element = document.getElementById("payslip");
+            html2pdf().from(element).set({
+                margin: 0,
+                filename: "Payslip.pdf",
+                jsPDF: { unit: "mm", format: "a4" }
+            }).save();
+        }
+
+
+
+
+
+
+        function removeBgAndCrop(src) {
+            const img = new Image();
+            img.src = src;
+
+            img.onload = () => {
+                const tempCanvas = document.createElement("canvas");
+                const ctx = tempCanvas.getContext("2d");
+
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+
+                ctx.drawImage(img, 0, 0);
+
+                const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                const data = imageData.data;
+
+                // 🔥 1. remove white background
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+
+                    if (r > 240 && g > 240 && b > 240) {
+                        data[i + 3] = 0; // transparent
+                    }
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+
+                // 🔥 2. auto crop
+                let top = tempCanvas.height, left = tempCanvas.width;
+                let right = 0, bottom = 0;
+
+                for (let y = 0; y < tempCanvas.height; y++) {
+                    for (let x = 0; x < tempCanvas.width; x++) {
+                        const alpha = ctx.getImageData(x, y, 1, 1).data[3];
+
+                        if (alpha > 0) {
+                            if (x < left) left = x;
+                            if (x > right) right = x;
+                            if (y < top) top = y;
+                            if (y > bottom) bottom = y;
+                        }
+                    }
+                }
+
+                const width = right - left;
+                const height = bottom - top;
+
+                const finalCanvas = document.getElementById("signCanvas");
+                finalCanvas.width = width;
+                finalCanvas.height = height;
+
+                const finalCtx = finalCanvas.getContext("2d");
+                finalCtx.drawImage(tempCanvas, left, top, width, height, 0, 0, width, height);
+            };
+        }
+
+        removeBgAndCrop("./topa.png");
+
+    </script>
+
+</body>
+
+</html>

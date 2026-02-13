@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pay Slip</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            background: #f4f4f4;
+        }
+
+        /* Hide button in pdf */
+        @media print {
+            .download-btn {
+                display: none !important;
+            }
+        }
+
+        .download-wrapper {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .download-btn {
+            background: #0056b3;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* 🔥 A4 PERFECT FIT */
+        .payslip-container {
+            width: 210mm;
+            /* A4 width */
+            min-height: 297mm;
+            /* A4 height */
+            padding: 18mm;
+            background: white;
+            margin: auto;
+            box-sizing: border-box;
+        }
+
+        h2,
+        h3 {
+            text-align: center;
+            color: #0056b3;
+            margin: 10px 0 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            border: 1px solid #e2e2e2;
+            padding: 8px 10px;
+        }
+
+        th {
+            background: #f3f3f3;
+        }
+
+        .section-header {
+            background: #ececec;
+            padding: 8px 10px;
+            border-left: 5px solid #0056b3;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .net-pay-summary {
+            background: #eaf4ff;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #b8dbff;
+        }
+
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid black;
+            width: 200px;
+            margin-top: 40px;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 20px;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="download-wrapper">
+        <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
+    </div>
+
+    <div class="payslip-container" id="payslip">
+
+        <h2>FutureTech Solutions Pvt. Ltd.</h2>
+        <h3>Pay Slip – August 2025</h3>
+
+        <div class="section-header">Employee Information</div>
+
+        <table>
+            <tr>
+                <th>Name</th>
+                <td>Neha Kandari</td>
+                <th>Designation</th>
+                <td>UI/UX Designer</td>
+            </tr>
+            <tr>
+                <th>Joining Date</th>
+                <td>22-Oct-2024</td>
+                <th>Worked Days</th>
+                <td>25</td>
+            </tr>
+        </table>
+
+        <div class="section-header">Earnings & Deductions</div>
+
+        <table>
+            <tr>
+                <th>Earnings</th>
+                <th>₹</th>
+                <th>Deductions</th>
+                <th>₹</th>
+            </tr>
+
+            <tr>
+                <td>Basic Pay</td>
+                <td>20,000</td>
+                <td>PF</td>
+                <td>0</td>
+            </tr>
+
+            <tr>
+                <td>HRA</td>
+                <td>7,000</td>
+                <td>Tax</td>
+                <td>0</td>
+            </tr>
+
+            <tr>
+                <td>Allowance</td>
+                <td>3,000</td>
+                <td></td>
+                <td></td>
+            </tr>
+
+            <tr style="font-weight:bold;background:#f0f8ff;">
+                <td>Total</td>
+                <td>30,000</td>
+                <td>Total</td>
+                <td>0</td>
+            </tr>
+        </table>
+
+        <div class="net-pay-summary">
+            Net Payable: ₹30,000 <br />
+            Rupees Thirty Thousand Only
+        </div>
+
+        <div class="signatures">
+            <div>
+                <div class="signature-line"></div>
+                Employer Signature
+            </div>
+
+            <div>
+                <div class="signature-line"></div>
+                Employee Signature
+            </div>
+        </div>
+
+        <div class="footer-note">
+            *System generated payslip
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        function downloadPDF() {
+            const element = document.getElementById("payslip");
+
+            html2pdf().set({
+                margin: 0,
+                filename: "Payslip.pdf",
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+            }).from(element).save();
+        }
+    </script>
+
+</body>
+
+</html>

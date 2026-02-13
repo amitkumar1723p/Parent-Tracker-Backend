@@ -14,7 +14,7 @@ router.use('/notification/v1', notification);
 router.use('/tracking/v1', trackingRoutes);
 
 //  Genrate FireBase Token  ----- start
-
+// "api//tracking/v1/child/update-live",
 
 router.post("/user/fcm-token", verifyUser(), async (req: any, res: Response) => {
     const { token } = req.body;

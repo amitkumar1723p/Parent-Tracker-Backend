@@ -5,7 +5,7 @@ export function verifyUser(allowedRoles?: string | string[]) {
   return (req: Request & { user?: any }, res: Response, next: NextFunction) => {
     try {
 
-
+      console.log('verify User running...........')
       const authHeader = req.headers.authorization;
 
       if (!authHeader?.startsWith("Bearer ")) {

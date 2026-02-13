@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pay Slip - Neha Kandari</title>
+
+    <style>
+        /* =============================
+           GLOBAL
+        ============================== */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            background: #f4f4f4;
+            color: #333;
+        }
+
+        /* Hide button in print/pdf */
+        @media print {
+            .download-btn {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+        }
+
+        .download-wrapper {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .download-btn {
+            background: #0056b3;
+            color: #fff;
+            padding: 10px 28px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* =============================
+           PERFECT A4 LAYOUT (MOST IMPORTANT)
+        ============================== */
+        .payslip-container {
+            width: 210mm;
+            /* exact A4 width */
+            min-height: 297mm;
+            /* exact A4 height */
+            margin: auto;
+            background: #fff;
+            padding: 15mm;
+            /* safe margins */
+            box-sizing: border-box;
+
+            border: 1px solid #cfcfcf;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+
+            page-break-inside: avoid;
+        }
+
+        h2,
+        h3 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 16px;
+        }
+
+        .company-info {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .company-info p {
+            margin: 4px 0;
+            font-size: 15px;
+        }
+
+        /* =============================
+           TABLE
+        ============================== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            border: 1px solid #e2e2e2;
+            padding: 9px 12px;
+        }
+
+        th {
+            background: #f6f6f6;
+            font-weight: 600;
+        }
+
+        /* prevent table break */
+        table,
+        tr,
+        td,
+        th {
+            page-break-inside: avoid !important;
+        }
+
+        /* =============================
+           SECTIONS
+        ============================== */
+        .section-header {
+            background: #ececec;
+            font-weight: bold;
+            padding: 9px 12px;
+            margin-bottom: 10px;
+            border-left: 5px solid #0056b3;
+            font-size: 15px;
+            page-break-inside: avoid;
+        }
+
+        .net-pay-summary {
+            background: #eaf4ff;
+            border: 1px solid #b8dbff;
+            padding: 14px;
+            margin-top: 20px;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .net-pay-summary p {
+            margin: 4px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #003e80;
+        }
+
+        /* =============================
+           SIGNATURE
+        ============================== */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .signature-box {
+            width: 40%;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            margin: 45px 0 8px;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 12px;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Download Button -->
+    <div class="download-wrapper">
+        <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
+    </div>
+
+    <!-- Payslip -->
+    <div class="payslip-container" id="payslip">
+
+        <div class="company-info">
+            <h2>FutureTech Solutions Pvt. Ltd.</h2>
+            <p>Gurugram, Haryana</p>
+        </div>
+
+        <h3>Pay Slip – August 2025</h3>
+
+        <div class="section-header">Employee Information & Work Details</div>
+
+        <table>
+            <tr>
+                <th>Employee Name</th>
+                <td>Neha Kandari</td>
+                <th>Designation</th>
+                <td>UI/UX Designer</td>
+            </tr>
+            <tr>
+                <th>Date of Joining</th>
+                <td>22-Oct-2024</td>
+                <th>Department</th>
+                <td>IT/Tech Team</td>
+            </tr>
+            <tr>
+                <th>Worked Days</th>
+                <td>25 Days</td>
+                <th>Pay Period</th>
+                <td>Aug 2025</td>
+            </tr>
+        </table>
+
+        <div class="section-header">Earnings & Deductions</div>
+
+        <table>
+            <tr>
+                <th>Earnings</th>
+                <th>Amount (₹)</th>
+                <th>Deductions</th>
+                <th>Amount (₹)</th>
+            </tr>
+
+            <tr>
+                <td>Basic Pay</td>
+                <td>20,000</td>
+                <td>Provident Fund</td>
+                <td>0</td>
+            </tr>
+
+            <tr>
+                <td>House Rent Allowance</td>
+                <td>7,000</td>
+                <td>Professional Tax</td>
+                <td>0</td>
+            </tr>
+
+            <tr>
+                <td>Special Allowance</td>
+                <td>3,000</td>
+                <td>Loan</td>
+                <td>0</td>
+            </tr>
+
+            <tr style="background:#f0f8ff;font-weight:bold;">
+                <td>Total Earnings</td>
+                <td>30,000</td>
+                <td>Total Deductions</td>
+                <td>0</td>
+            </tr>
+        </table>
+
+        <div class="net-pay-summary">
+            <p>Net Payable Amount: ₹30,000</p>
+            <p>Rupees Thirty Thousand Only</p>
+        </div>
+
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                Employer Signature
+            </div>
+
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                Employee Signature
+            </div>
+        </div>
+
+        <div class="footer-note">
+            *This is a system-generated payslip template.
+        </div>
+    </div>
+
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        function downloadPDF() {
+            const element = document.getElementById("payslip");
+
+            const opt = {
+                margin: 0,
+                filename: "Payslip-August-2025.pdf",
+
+                image: {
+                    type: "jpeg",
+                    quality: 1
+                },
+
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    scrollY: 0
+                },
+
+                jsPDF: {
+                    unit: "mm",
+                    format: "a4",
+                    orientation: "portrait"
+                }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+
+</body>
+
+</html>
