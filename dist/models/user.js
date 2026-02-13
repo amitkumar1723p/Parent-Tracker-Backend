@@ -1,39 +1,51 @@
 // src/models/User.ts
-// ✔ This model represents your main app user.
-// ✔ Works perfectly with OTP-based auth (no password required)
-import mongoose, { Schema } from 'mongoose';
-// Mongoose schema for User collection
+import mongoose, { Schema } from "mongoose";
 const UserSchema = new Schema({
+    // ✅ Basic info
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true }, // OTP login based
-    phone: { type: String }, // Optional field
+    email: { type: String, required: true, unique: true },
+    phone: { type: String },
     role: {
         type: String,
-        enum: ['parent', 'child',],
+        enum: ["parent", "child"],
         required: true,
     },
     gender: { type: String },
-    avatarUrl: String, // optional
-    // parent field --- start
+    avatarUrl: { type: String },
+    // ✅ Parent fields
     inviteCode: {
         type: String,
         unique: true,
-        sparse: true, // allow null for child users
+        sparse: true, // allow null/undefined
     },
-    children: [{
+    children: [
+        {
             type: Schema.Types.ObjectId,
-            ref: 'User',
-        }],
-    // parent field --- end
-    // 👶 Child fields
+            ref: "User",
+        },
+    ],
+    // ✅ Child fields
     parentId: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
         index: true,
     },
-    isBlocked: {
-        type: Boolean,
+    // ✅ Live tracking fields (child)
+    coordinates: {
+        lat: { type: Number },
+        lng: { type: Number },
     },
-    fcmTokens: { type: [String], default: [] }
+    speed: { type: Number, }, // m/s
+    heading: { type: Number, }, // degrees
+    batteryLevel: { type: Number, }, // 0-100
+    isMoving: { type: Boolean },
+    movementStatus: {
+        type: String,
+        enum: ["STOPPED", "MOVING", "RUNNING"],
+    },
+    lastLocationAt: { type: Date },
+    // ✅ Block + FCM
+    isBlocked: { type: Boolean, default: false },
+    fcmTokens: { type: [String], default: [] },
 }, { timestamps: true });
-export default mongoose.model('User', UserSchema);
+export default mongoose.model("User", UserSchema);
