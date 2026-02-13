@@ -1,2 +1,2 @@
-"use strict";
+export {};
 //  # JWT sign/verify utils

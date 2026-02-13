@@ -1,2 +1,2 @@
-"use strict";
+export {};
 //  # child device info

@@ -1,2 +1,2 @@
-"use strict";
+export {};
 // # relation between parent & child

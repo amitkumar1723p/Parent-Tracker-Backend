@@ -1,2 +1,2 @@
-"use strict";
+export {};
 //  # device registration routes

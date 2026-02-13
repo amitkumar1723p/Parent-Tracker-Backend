@@ -3,12 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-"scripts": {
-  "dev": "tsx watch src/index.ts",
-  "build": "tsc",
- "start": "node dist/index.js"
-}
-,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc && tsc-alias",
+    "start": "node dist/index.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -45,6 +44,7 @@
     "@types/node": "^24.10.0",
     "@types/nodemailer": "^7.0.3",
     "nodemon": "^3.1.10",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

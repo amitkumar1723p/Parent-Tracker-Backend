@@ -1,6 +1,6 @@
-"use strict";
 // import { Server as HttpServer } from "http";
 // import { Server, Socket } from "socket.io";
+export {};
 // export function initSocket(server: HttpServer) {
 //     const io = new Server(server, {
 //         cors: {

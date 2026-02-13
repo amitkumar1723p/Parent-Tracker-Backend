@@ -1,2 +1,2 @@
-"use strict";
+export {};
 // # geofence CRUD API

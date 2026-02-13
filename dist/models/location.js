@@ -1,2 +1,2 @@
-"use strict";
+export {};
 //  # location data points (with geo index)
