@@ -1,21 +1,26 @@
-import { Router } from "express";
-import { z } from 'zod';
-import { upload } from "../middlewares/upload";
-import Otp from '../models/Otp';
-import User from '../models/user';
-import { signAccessToken, signRefreshToken } from '../utils/jwt.js';
-import { sendOtpEmail } from '../utils/mail';
-import { uploadToS3 } from "../utils/uploadToS3";
-import jwt from "jsonwebtoken";
-import RefreshToken from "../models/refreshtoken";
-const router = Router();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const zod_1 = require("zod");
+const upload_1 = require("../middlewares/upload");
+const Otp_1 = __importDefault(require("../models/Otp"));
+const user_1 = __importDefault(require("../models/user"));
+const jwt_js_1 = require("../utils/jwt.js");
+const mail_1 = require("../utils/mail");
+const uploadToS3_1 = require("../utils/uploadToS3");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const refreshtoken_1 = __importDefault(require("../models/refreshtoken"));
+const router = (0, express_1.Router)();
 /* ---------------------------------------------------------
    📌 1. SEND OTP
 ---------------------------------------------------------- */
 router.post('/send-otp', async (req, res) => {
     try {
-        const bodySchema = z.object({
-            email: z.string().email(),
+        const bodySchema = zod_1.z.object({
+            email: zod_1.z.string().email(),
         });
         const parsed = bodySchema.safeParse(req.body);
         if (!parsed.success)
@@ -29,14 +34,14 @@ router.post('/send-otp', async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000)?.toString();
         console.log(otp, "Otpd");
         // Remove existing OTP (cleanup)
-        await Otp.deleteMany({ email });
+        await Otp_1.default.deleteMany({ email });
         // Save OTP with 5 min expiry
-        await Otp.create({
+        await Otp_1.default.create({
             email,
             otp,
             expiresAt: new Date(Date.now() + 5 * 60 * 1000),
         });
-        await sendOtpEmail(email, otp); // <<--- real email send
+        await (0, mail_1.sendOtpEmail)(email, otp); // <<--- real email send
         res.status(200).json({
             status: true,
             message: 'OTP sent successfully',
@@ -49,9 +54,9 @@ router.post('/send-otp', async (req, res) => {
 });
 router.post('/verify-otp', async (req, res) => {
     try {
-        const schema = z.object({
-            email: z.string().email(),
-            otp: z.string().length(6),
+        const schema = zod_1.z.object({
+            email: zod_1.z.string().email(),
+            otp: zod_1.z.string().length(6),
         });
         const parsed = schema.safeParse(req.body);
         if (!parsed.success)
@@ -62,7 +67,7 @@ router.post('/verify-otp', async (req, res) => {
             });
         const { email, otp } = parsed.data;
         // Check in DB
-        const record = await Otp.findOne({ email, otp });
+        const record = await Otp_1.default.findOne({ email, otp });
         if (!record)
             return res.status(400).json({ status: false, message: 'Invalid OTP' });
         if (record.expiresAt < new Date())
@@ -71,17 +76,17 @@ router.post('/verify-otp', async (req, res) => {
         record.verified = true;
         await record.save();
         //  Check user is exit or not
-        let exists = await User.findOne({ email }).lean();
+        let exists = await user_1.default.findOne({ email }).lean();
         ;
         let response = {
             status: true,
             message: 'OTP Verified',
         };
         if (exists) {
-            const accessToken = signAccessToken(exists);
-            const refreshToken = signRefreshToken(exists);
-            await RefreshToken.deleteMany({ userId: exists._id });
-            await RefreshToken.create({
+            const accessToken = (0, jwt_js_1.signAccessToken)(exists);
+            const refreshToken = (0, jwt_js_1.signRefreshToken)(exists);
+            await refreshtoken_1.default.deleteMany({ userId: exists._id });
+            await refreshtoken_1.default.create({
                 userId: exists._id,
                 token: refreshToken,
             });
@@ -106,20 +111,20 @@ async function generateUniqueInviteCode() {
         for (let i = 0; i < 9; i++) {
             code += chars.charAt(Math.floor(Math.random() * chars.length));
         }
-        const exists = await User.findOne({ inviteCode: code }).lean();
+        const exists = await user_1.default.findOne({ inviteCode: code }).lean();
         if (!exists)
             return code; // Unique → return this
     }
 }
-router.post('/complete-profile', upload.single("profilePhoto"), // <- IMPORTANT
+router.post('/complete-profile', upload_1.upload.single("profilePhoto"), // <- IMPORTANT
 async (req, res) => {
     try {
-        const schema = z.object({
-            email: z.string().email(),
-            gender: z.string().optional(),
-            name: z.string().min(2),
-            role: z.enum(['parent', 'child',]),
-            phone: z.string().optional(),
+        const schema = zod_1.z.object({
+            email: zod_1.z.string().email(),
+            gender: zod_1.z.string().optional(),
+            name: zod_1.z.string().min(2),
+            role: zod_1.z.enum(['parent', 'child',]),
+            phone: zod_1.z.string().optional(),
         });
         const parsed = schema.safeParse(req.body);
         if (!parsed.success)
@@ -130,7 +135,7 @@ async (req, res) => {
             });
         // tempToken,
         const { name, role, phone, email, gender } = parsed.data;
-        let exists = await Otp.findOne({ email, verified: true }).lean();
+        let exists = await Otp_1.default.findOne({ email, verified: true }).lean();
         ;
         if (!exists) {
             return res.status(400).json({
@@ -146,10 +151,10 @@ async (req, res) => {
         // Upload image to S3
         let profilePhotoUrl = null;
         if (req.file) {
-            profilePhotoUrl = await uploadToS3(req.file);
+            profilePhotoUrl = await (0, uploadToS3_1.uploadToS3)(req.file);
         }
         // Create new user
-        const user = await User.create({
+        const user = await user_1.default.create({
             name,
             email,
             role,
@@ -159,10 +164,10 @@ async (req, res) => {
             inviteCode,
         });
         // Generate final login token
-        const accessToken = signAccessToken(user);
-        const refreshToken = signRefreshToken(user);
-        await RefreshToken.deleteMany({ userId: user._id });
-        await RefreshToken.create({
+        const accessToken = (0, jwt_js_1.signAccessToken)(user);
+        const refreshToken = (0, jwt_js_1.signRefreshToken)(user);
+        await refreshtoken_1.default.deleteMany({ userId: user._id });
+        await refreshtoken_1.default.create({
             userId: user._id,
             token: refreshToken,
         });
@@ -196,19 +201,19 @@ router.post("/refresh", async (req, res) => {
             return res.status(401).json({ code: "REFRESH_MISSING" });
         }
         const refreshToken = auth.split(" ")[1];
-        const payload = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
-        const stored = await RefreshToken.findOne({
+        const payload = jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_SECRET);
+        const stored = await refreshtoken_1.default.findOne({
             userId: payload?._id,
             token: refreshToken,
         });
         if (!stored) {
             return res.status(401).json({ code: "REFRESH_INVALID" });
         }
-        const user = await User.findById(payload._id);
+        const user = await user_1.default.findById(payload._id);
         if (!user || user.isBlocked) {
             return res.status(403).json({ code: "USER_BLOCKED" });
         }
-        const newAccessToken = signAccessToken(user);
+        const newAccessToken = (0, jwt_js_1.signAccessToken)(user);
         return res.json({ accessToken: newAccessToken });
     }
     catch (err) {
@@ -216,4 +221,4 @@ router.post("/refresh", async (req, res) => {
         return res.status(401).json({ code: "REFRESH_EXPIRED" });
     }
 });
-export default router;
+exports.default = router;

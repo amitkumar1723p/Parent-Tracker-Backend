@@ -1,3 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.distanceMeters = distanceMeters;
+exports.getMovementStatus = getMovementStatus;
 function toRad(v) {
     return (v * Math.PI) / 180;
 }
@@ -5,7 +9,7 @@ function toRad(v) {
  * ✅ Haversine formula
  * Returns distance in meters between 2 coordinates
  */
-export function distanceMeters(lat1, lng1, lat2, lng2) {
+function distanceMeters(lat1, lng1, lat2, lng2) {
     const R = 6371000; // earth radius in meters
     const dLat = toRad(lat2 - lat1);
     const dLng = toRad(lng2 - lng1);
@@ -21,7 +25,7 @@ export function distanceMeters(lat1, lng1, lat2, lng2) {
  * - MOVING if moved >= 12m OR speed > 0.3
  * - STOPPED otherwise
  */
-export function getMovementStatus({ prev, next, }) {
+function getMovementStatus({ prev, next, }) {
     let moved = 0;
     // ✅ Note: 0 lat/lng is valid so use typeof check
     if (typeof prev?.lat === "number" &&

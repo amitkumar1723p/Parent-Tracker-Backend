@@ -1,7 +1,12 @@
-import mongoose from "mongoose";
-const NotificationSchema = new mongoose.Schema({
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importDefault(require("mongoose"));
+const NotificationSchema = new mongoose_1.default.Schema({
     userId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
         required: true,
     },
@@ -15,4 +20,4 @@ const NotificationSchema = new mongoose.Schema({
         default: false,
     },
 }, { timestamps: true });
-export default mongoose.model("Notification", NotificationSchema);
+exports.default = mongoose_1.default.model("Notification", NotificationSchema);

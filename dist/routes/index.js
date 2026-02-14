@@ -1,23 +1,28 @@
-import { Router } from 'express';
-import authRoutes from './auth.routes.js';
-import connection from './connection.routes.js';
-import notification from './notification.routes.js';
-import { verifyUser } from '../middlewares/authMiddleware.js';
-import user from '../models/user.js';
-import trackingRoutes from "./tracking.routes.js";
-import mongoose from "mongoose";
-const router = Router();
-router.use('/auth/v1', authRoutes);
-router.use('/connection/v1', connection);
-router.use('/notification/v1', notification);
-router.use('/tracking/v1', trackingRoutes);
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_routes_js_1 = __importDefault(require("./auth.routes.js"));
+const connection_routes_js_1 = __importDefault(require("./connection.routes.js"));
+const notification_routes_js_1 = __importDefault(require("./notification.routes.js"));
+const authMiddleware_js_1 = require("../middlewares/authMiddleware.js");
+const user_js_1 = __importDefault(require("../models/user.js"));
+const tracking_routes_js_1 = __importDefault(require("./tracking.routes.js"));
+const mongoose_1 = __importDefault(require("mongoose"));
+const router = (0, express_1.Router)();
+router.use('/auth/v1', auth_routes_js_1.default);
+router.use('/connection/v1', connection_routes_js_1.default);
+router.use('/notification/v1', notification_routes_js_1.default);
+router.use('/tracking/v1', tracking_routes_js_1.default);
 //  Genrate FireBase Token  ----- start
 // "api//tracking/v1/child/update-live",
-router.post("/user/fcm-token", verifyUser(), async (req, res) => {
+router.post("/user/fcm-token", (0, authMiddleware_js_1.verifyUser)(), async (req, res) => {
     const { token } = req.body;
     console.log("📲 Saving token for user:", req.user._id);
     console.log("📲 Token:", token);
-    await user.updateOne({ _id: req.user._id }, { $addToSet: { fcmTokens: token } });
+    await user_js_1.default.updateOne({ _id: req.user._id }, { $addToSet: { fcmTokens: token } });
     res.json({ success: true });
 });
 // get children parent wise ---------------- start
@@ -27,10 +32,10 @@ router.post("/user/fcm-token", verifyUser(), async (req, res) => {
  *  parent login required
  * - returns children list with basic profile fields
  */
-router.get("/parent/children/v1", verifyUser("parent"), async (req, res) => {
+router.get("/parent/children/v1", (0, authMiddleware_js_1.verifyUser)("parent"), async (req, res) => {
     try {
-        const parentId = new mongoose.Types.ObjectId(req.user._id);
-        const result = await user.aggregate([
+        const parentId = new mongoose_1.default.Types.ObjectId(req.user._id);
+        const result = await user_js_1.default.aggregate([
             // 1️⃣ Match logged-in parent
             {
                 $match: {
@@ -88,5 +93,5 @@ router.get("/parent/children/v1", verifyUser("parent"), async (req, res) => {
     }
 });
 //   Genrate FireBase Token  ------- end
-export default router;
+exports.default = router;
 //   # combines all routes

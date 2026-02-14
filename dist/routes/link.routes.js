@@ -1,12 +1,17 @@
-import { Router } from "express";
-import User from "../models/user";
-import { verifyUser } from '../middlewares/authMiddleware';
-const router = Router();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const user_1 = __importDefault(require("../models/user"));
+const authMiddleware_1 = require("../middlewares/authMiddleware");
+const router = (0, express_1.Router)();
 /**
  * 📌 Child connects to Parent using inviteCode
  * Endpoint: POST /connect-parent
  */
-router.post("/connect-parent", verifyUser(), async (req, res) => {
+router.post("/connect-parent", (0, authMiddleware_1.verifyUser)(), async (req, res) => {
     try {
         const child = req.user;
         const { inviteCode } = req.body;
@@ -17,7 +22,7 @@ router.post("/connect-parent", verifyUser(), async (req, res) => {
             });
         }
         // Ensure user with code exists and is a parent
-        const parent = await User.findOne({ inviteCode, role: "parent" });
+        const parent = await user_1.default.findOne({ inviteCode, role: "parent" });
         if (!parent) {
             return res.status(404).json({
                 status: false,
@@ -32,7 +37,7 @@ router.post("/connect-parent", verifyUser(), async (req, res) => {
             });
         }
         // ✅ Direct child update (NO FETCH)
-        await User.updateOne({ _id: req.user._id }, { $set: { parentId: parent._id } });
+        await user_1.default.updateOne({ _id: req.user._id }, { $set: { parentId: parent._id } });
         // Add child to parent's children array (if not exists)
         if (!parent.children)
             parent.children = [];
@@ -53,4 +58,4 @@ router.post("/connect-parent", verifyUser(), async (req, res) => {
     catch (error) {
     }
 });
-export default router;
+exports.default = router;

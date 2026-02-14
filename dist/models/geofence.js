@@ -1,2 +1,2 @@
-export {};
+"use strict";
 // # geofencing safe zone schema

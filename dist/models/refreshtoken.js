@@ -1,7 +1,12 @@
-import mongoose from "mongoose";
-const refreshTokenSchema = new mongoose.Schema({
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importDefault(require("mongoose"));
+const refreshTokenSchema = new mongoose_1.default.Schema({
     userId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
         required: true,
     },
@@ -15,4 +20,4 @@ const refreshTokenSchema = new mongoose.Schema({
         expires: 60 * 60 * 24 * 30, // ⏳ auto delete after 30 days
     },
 });
-export default mongoose.model("RefreshToken", refreshTokenSchema);
+exports.default = mongoose_1.default.model("RefreshToken", refreshTokenSchema);

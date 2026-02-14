@@ -1,11 +1,17 @@
+"use strict";
 // src/utils/mail.ts
 // ✔ This file handles all email sending (OTP, alerts, notifications)
 // ✔ Uses Nodemailer with Gmail App Password (Most reliable method)
-import nodemailer from 'nodemailer';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendOtpEmail = exports.mailTransporter = void 0;
+const nodemailer_1 = __importDefault(require("nodemailer"));
 const EMAIL_USER = process.env.SMTP_USER || '';
 const EMAIL_PASS = process.env.SMTP_PASS || '';
 // Create reusable transporter
-export const mailTransporter = nodemailer.createTransport({
+exports.mailTransporter = nodemailer_1.default.createTransport({
     service: 'gmail', // Gmail SMTP
     auth: {
         user: EMAIL_USER, // Gmail address
@@ -17,7 +23,7 @@ export const mailTransporter = nodemailer.createTransport({
  * @param email - Target email
  * @param otp - 6-digit OTP
  */
-export const sendOtpEmail = async (email, otp) => {
+const sendOtpEmail = async (email, otp) => {
     const mailOptions = {
         from: `"Parent Tracker App" <${EMAIL_USER}>`,
         to: email,
@@ -33,5 +39,6 @@ export const sendOtpEmail = async (email, otp) => {
     `,
     };
     // Send email
-    await mailTransporter.sendMail(mailOptions);
+    await exports.mailTransporter.sendMail(mailOptions);
 };
+exports.sendOtpEmail = sendOtpEmail;

@@ -1,4 +1,7 @@
-export const env = {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.env = void 0;
+exports.env = {
     PORT: Number(process.env.PORT || 4000),
     MONGO_URI: process.env.MONGO_URI,
     JWT_SECRET: process.env.JWT_SECRET,

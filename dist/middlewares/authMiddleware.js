@@ -1,5 +1,11 @@
-import jwt from "jsonwebtoken";
-export function verifyUser(allowedRoles) {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.verifyUser = verifyUser;
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+function verifyUser(allowedRoles) {
     return (req, res, next) => {
         try {
             console.log('verify User running...........');
@@ -8,7 +14,7 @@ export function verifyUser(allowedRoles) {
                 return res.status(401).json({ code: "TOKEN_MISSING" });
             }
             const token = authHeader.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+            const decoded = jsonwebtoken_1.default.verify(token, process.env.ACCESS_SECRET);
             req.user = decoded;
             // ✅ Role check (optional)
             if (allowedRoles) {

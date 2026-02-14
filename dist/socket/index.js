@@ -1,12 +1,15 @@
-import { Server } from "socket.io";
-export let io;
-export function initSocket(server) {
-    io = new Server(server, {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.io = void 0;
+exports.initSocket = initSocket;
+const socket_io_1 = require("socket.io");
+function initSocket(server) {
+    exports.io = new socket_io_1.Server(server, {
         cors: {
             origin: "*",
         },
     });
-    io.on("connection", (socket) => {
+    exports.io.on("connection", (socket) => {
         console.log("✅ socket connected:", socket.id);
         /**
          * ✅ Parent joins parent room
@@ -21,5 +24,5 @@ export function initSocket(server) {
             console.log("❌ socket disconnected:", socket.id);
         });
     });
-    return io;
+    return exports.io;
 }

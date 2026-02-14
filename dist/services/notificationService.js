@@ -1,6 +1,12 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendPush = sendPush;
 // // Firebase Admin SDK import
 // // Iska use backend se push notification bhejne ke liye hota hai
-import admin from "../config/firebaseAdmin";
+const firebaseAdmin_1 = __importDefault(require("../config/firebaseAdmin"));
 // /**
 //  * 📌 sendPush
 //  * --------------------------------------------------
@@ -89,7 +95,7 @@ import admin from "../config/firebaseAdmin";
 //   const response = await admin.messaging().sendEachForMulticast(message);
 //   // 📊 Success count log (debug / monitoring ke liye)
 // }
-export async function sendPush(tokens, title, body, data = {}) {
+async function sendPush(tokens, title, body, data = {}) {
     if (!tokens?.length)
         return;
     const message = {
@@ -110,7 +116,7 @@ export async function sendPush(tokens, title, body, data = {}) {
         },
     };
     // const response = await admin.messaging().sendEachForMulticast(message);
-    const response = await admin.messaging().sendEachForMulticast(message);
+    const response = await firebaseAdmin_1.default.messaging().sendEachForMulticast(message);
     console.log("✅ success:", response.successCount);
     console.log("❌ fail:", response.failureCount);
     response.responses.forEach((r, i) => {
